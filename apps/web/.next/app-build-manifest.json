@@ -85,6 +85,21 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/dashboard/parent/clips/page.js"
+    ],
+    "/dashboard/parent/consultations/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/parent/consultations/page.js"
+    ],
+    "/assessment/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/assessment/page.js"
+    ],
+    "/dashboard/specialist/patient/[id]/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/specialist/patient/[id]/page.js"
     ]
   }
 }
