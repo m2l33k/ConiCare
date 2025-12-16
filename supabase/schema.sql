@@ -16,6 +16,8 @@ create table public.children (
   name text not null,
   pin_code text default '1234' not null,
   avatar_theme text default 'default',
+  age integer,
+  conditions text[],
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
@@ -98,7 +100,7 @@ create policy "Parents can insert assessments" on public.assessments
   );
 
 -- Specialists can view and update assessments.
-create policy "Specialists can view all assessments" on public.assessments
+create policy "Specialists can view assessments" on public.assessments
   for select using (
     exists (
       select 1 from public.profiles
@@ -114,38 +116,20 @@ create policy "Specialists can update assessments" on public.assessments
     )
   );
 
--- Game Scores:
--- Public read (or restricted to parent/specialist).
-create policy "Parents can view their children's scores" on public.game_scores
-  for select using (
-    exists (
-      select 1 from public.children
-      where children.id = game_scores.child_id and children.parent_id = auth.uid()
-    )
-  );
 
--- Insert policy (usually from client side if authenticated as parent, or maybe anonymous? 
--- The user said "Child Game Mode" is usually a kiosk. 
--- If the child is playing, who is logged in? The parent? 
--- Assuming Parent is logged in on the device.)
-create policy "Parents can insert game scores" on public.game_scores
-  for insert with check (
-    exists (
-      select 1 from public.children
-      where children.id = game_scores.child_id and children.parent_id = auth.uid()
-    )
-  );
+-- STORAGE BUCKET SETUP (Run this in Supabase SQL Editor)
+-- 1. Create the 'assessments' bucket
+insert into storage.buckets (id, name, public)
+values ('assessments', 'assessments', true)
+on conflict (id) do nothing;
 
--- Trigger for New User Creation (Auto-Profile)
-create or replace function public.handle_new_user()
-returns trigger as $$
-begin
-  insert into public.profiles (id, full_name, role)
-  values (new.id, new.raw_user_meta_data->>'full_name', coalesce(new.raw_user_meta_data->>'role', 'parent'));
-  return new;
-end;
-$$ language plpgsql security definer;
+-- 2. Storage Policies
+-- Allow public access to read (or restrict to authenticated users)
+create policy "Public Access"
+  on storage.objects for select
+  using ( bucket_id = 'assessments' );
 
-create trigger on_auth_user_created
-  after insert on auth.users
-  for each row execute procedure public.handle_new_user();
+-- Allow authenticated users to upload
+create policy "Authenticated users can upload"
+  on storage.objects for insert
+  with check ( bucket_id = 'assessments' and auth.role() = 'authenticated' );

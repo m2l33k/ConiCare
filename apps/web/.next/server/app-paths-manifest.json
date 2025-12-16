@@ -3,5 +3,6 @@
   "/assessment/page": "app/assessment/page.js",
   "/(auth)/login/page": "app/(auth)/login/page.js",
   "/dashboard/parent/page": "app/dashboard/parent/page.js",
+  "/child/play/page": "app/child/play/page.js",
   "/dashboard/specialist/page": "app/dashboard/specialist/page.js"
 }
