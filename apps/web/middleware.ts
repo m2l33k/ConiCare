@@ -1,27 +1,73 @@
-import { NextResponse } from 'next/server';
-import type { NextRequest } from 'next/server';
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
 
-export function middleware(request: NextRequest) {
-  // 1. Basic Locale Handling (Placeholder for next-intl)
-  // In a real app, this would detect 'ar' vs 'en' and rewrite the URL.
+export async function middleware(request: NextRequest) {
+  let response = NextResponse.next({
+    request: {
+      headers: request.headers,
+    },
+  })
 
-  // 2. Role-Based Access Control (RBAC)
-  // Mock Logic: Check if path starts with /dashboard/specialist and if user has role.
-  // Real implementation uses supabase.auth.getSession()
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name: string) {
+          return request.cookies.get(name)?.value
+        },
+        set(name: string, value: string, options: CookieOptions) {
+          request.cookies.set({
+            name,
+            value,
+            ...options,
+          })
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          })
+          response.cookies.set({
+            name,
+            value,
+            ...options,
+          })
+        },
+        remove(name: string, options: CookieOptions) {
+          request.cookies.set({
+            name,
+            value: '',
+            ...options,
+          })
+          response = NextResponse.next({
+            request: {
+              headers: request.headers,
+            },
+          })
+          response.cookies.set({
+            name,
+            value: '',
+            ...options,
+          })
+        },
+      },
+    }
+  )
 
-  const path = request.nextUrl.pathname;
+  await supabase.auth.getUser()
 
-  // Mock: If user tries to access specialist without auth (simulation)
-  // if (path.startsWith('/dashboard/specialist')) {
-  //   const token = request.cookies.get('sb-access-token');
-  //   if (!token) {
-  //     return NextResponse.redirect(new URL('/login', request.url));
-  //   }
-  // }
-
-  return NextResponse.next();
+  return response
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/child/:path*', '/admin/:path*'],
-};
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * Feel free to modify this pattern to include more paths.
+     */
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+  ],
+}

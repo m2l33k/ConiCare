@@ -1,35 +1,52 @@
-import { createClient } from '@/lib/supabase/server'
+import { createServerClient, type CookieOptions } from '@supabase/ssr'
+import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url)
   const code = searchParams.get('code')
-  
-  // We ignore 'next' here because we want to redirect based on the user's role in the DB
-  // But we can keep it as a fallback if needed.
+  const next = searchParams.get('next') ?? '/dashboard/parent'
 
   if (code) {
-    const supabase = createClient()
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
-    
-    if (!error) {
-      // Fetch user profile to determine role
-      const { data: { user } } = await supabase.auth.getUser()
-      
-      if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', user.id)
-          .single()
-        
-        if (profile?.role) {
-          return NextResponse.redirect(`${origin}/dashboard/${profile.role}`)
-        }
+    const cookieStore = cookies()
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value
+          },
+          set(name: string, value: string, options: CookieOptions) {
+            cookieStore.set({ name, value, ...options })
+          },
+          remove(name: string, options: CookieOptions) {
+            cookieStore.delete({ name, ...options })
+          },
+        },
       }
-      
-      // Fallback if no profile found (shouldn't happen with trigger)
-      return NextResponse.redirect(`${origin}/dashboard/parent`)
+    )
+    
+    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    if (!error) {
+        // Check user role to redirect appropriately
+        const { data: { user } } = await supabase.auth.getUser()
+        
+        if (user) {
+            const { data: profile } = await supabase
+                .from('profiles')
+                .select('role')
+                .eq('id', user.id)
+                .single()
+            
+            if (profile?.role === 'specialist') {
+                return NextResponse.redirect(`${origin}/dashboard/specialist`)
+            } else if (profile?.role === 'parent') {
+                return NextResponse.redirect(`${origin}/dashboard/parent`)
+            }
+        }
+        
+        return NextResponse.redirect(`${origin}${next}`)
     }
   }
 
