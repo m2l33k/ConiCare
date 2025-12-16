@@ -59,8 +59,59 @@ export default function SpecialistCockpitClient({ initialAssessments }: { initia
 
   if (!selectedAssessment) {
     return (
-      <div className="h-full flex items-center justify-center text-slate-500">
-        No pending assessments found. Good job!
+      <div className="h-[calc(100vh-2rem)] flex flex-col p-8 overflow-y-auto">
+        <header className="mb-10">
+          <h1 className="text-3xl font-bold text-slate-900">Good Morning, Dr. Specialist</h1>
+          <p className="text-slate-500 mt-2">Here is your daily clinical overview.</p>
+        </header>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
+             <div className="p-4 bg-green-50 text-green-600 rounded-xl">
+               <CheckCircle size={24} />
+             </div>
+             <div>
+               <div className="text-2xl font-bold text-slate-900">0</div>
+               <div className="text-sm text-slate-500 font-medium">Pending Reviews</div>
+             </div>
+          </div>
+          
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
+             <div className="p-4 bg-blue-50 text-blue-600 rounded-xl">
+               <Activity size={24} />
+             </div>
+             <div>
+               <div className="text-2xl font-bold text-slate-900">5</div>
+               <div className="text-sm text-slate-500 font-medium">Active Patients</div>
+             </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
+             <div className="p-4 bg-purple-50 text-purple-600 rounded-xl">
+               <History size={24} />
+             </div>
+             <div>
+               <div className="text-2xl font-bold text-slate-900">12</div>
+               <div className="text-sm text-slate-500 font-medium">Weekly Sessions</div>
+             </div>
+          </div>
+        </div>
+
+        <div className="flex-1 bg-white rounded-2xl shadow-sm border border-slate-100 p-8 flex flex-col items-center justify-center text-center">
+          <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-6">
+            <CheckCircle className="text-slate-300" size={48} />
+          </div>
+          <h2 className="text-xl font-bold text-slate-900 mb-2">You are all caught up!</h2>
+          <p className="text-slate-500 max-w-md mb-8">
+            There are no pending video assessments to review at this moment. You can manage your patients or check the schedule.
+          </p>
+          <a 
+            href="/dashboard/specialist/patients" 
+            className="px-6 py-3 bg-medical-600 hover:bg-medical-700 text-white font-bold rounded-xl transition-colors"
+          >
+            View My Patients
+          </a>
+        </div>
       </div>
     );
   }
@@ -97,18 +148,17 @@ export default function SpecialistCockpitClient({ initialAssessments }: { initia
            )}
         </div>
 
-        <div className="p-4 bg-gradient-to-t from-black/80 to-transparent text-white absolute bottom-0 w-full pointer-events-none">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-bold">Assessment #{selectedAssessment.id.slice(0, 8)} - {selectedAssessment.children.name}</h3>
-              <p className="text-xs text-slate-300">
-                Recorded {new Date(selectedAssessment.created_at).toLocaleString()}
-              </p>
-            </div>
-            <div className={`px-2 py-1 rounded text-xs font-bold uppercase ${selectedAssessment.status === 'reviewed' ? 'bg-green-500/20 text-green-400' : 'bg-amber-500/20 text-amber-400'}`}>
-              {selectedAssessment.status}
-            </div>
+        <div className="p-4 bg-gradient-to-t from-black/80 to-transparent text-white absolute bottom-0 w-full pointer-events-auto flex justify-between items-end">
+          <div>
+            <h2 className="text-2xl font-bold">{selectedAssessment.children.name}</h2>
+            <p className="opacity-80">Recorded on {new Date(selectedAssessment.created_at).toLocaleString()}</p>
           </div>
+          <a 
+            href={`/dashboard/specialist/patient/${selectedAssessment.children.id}`}
+            className="bg-white/20 hover:bg-white/30 backdrop-blur-md px-4 py-2 rounded-lg text-sm font-bold transition-colors border border-white/10"
+          >
+            Open Patient Dashboard
+          </a>
         </div>
       </div>
 

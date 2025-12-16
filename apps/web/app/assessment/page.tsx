@@ -17,6 +17,28 @@ export default function AssessmentRecorder() {
   const [isUploading, setIsUploading] = useState(false);
   const [audioLevel, setAudioLevel] = useState(0);
 
+  const [children, setChildren] = useState<{ id: string, name: string }[]>([]);
+  const [selectedChildId, setSelectedChildId] = useState<string>("");
+
+  useEffect(() => {
+    const fetchChildren = async () => {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data } = await supabase
+          .from('children')
+          .select('id, name')
+          .eq('parent_id', user.id);
+        
+        if (data && data.length > 0) {
+          setChildren(data);
+          setSelectedChildId(data[0].id);
+        }
+      }
+    };
+    fetchChildren();
+  }, []);
+
   // Mock Audio Waveform
   useEffect(() => {
     if (isRecording) {
@@ -30,6 +52,11 @@ export default function AssessmentRecorder() {
   }, [isRecording]);
 
   const handleStart = () => {
+    if (!selectedChildId) {
+      alert("Please select a child first!");
+      return;
+    }
+    
     chunksRef.current = [];
     if (webcamRef.current?.stream) {
       setIsRecording(true);
@@ -70,15 +97,7 @@ export default function AssessmentRecorder() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      // 2. Get Child (First one for MVP)
-      const { data: children } = await supabase
-        .from('children')
-        .select('id')
-        .eq('parent_id', user.id)
-        .limit(1);
-        
-      if (!children || children.length === 0) throw new Error("No child profile found");
-      const childId = children[0].id;
+      if (!selectedChildId) throw new Error("No child selected");
 
       // 3. Upload to Storage
       const fileName = `${user.id}/${Date.now()}.webm`;
@@ -92,108 +111,126 @@ export default function AssessmentRecorder() {
       const { error: dbError } = await supabase
         .from('assessments')
         .insert({
-          child_id: childId,
+          child_id: selectedChildId,
           video_path: fileName,
           status: 'pending'
         });
 
       if (dbError) throw dbError;
-
+      
       // Success
-      setStep(2);
-      setTimeout(() => {
-        alert("Assessment uploaded successfully!");
-        router.push("/dashboard/parent");
-      }, 1000);
-
+      alert("Assessment uploaded successfully!");
+      router.push("/dashboard/parent");
+      
     } catch (error: any) {
-      console.error("Upload failed:", error);
+      console.error(error);
       alert("Upload failed: " + error.message);
+    } finally {
       setIsUploading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 flex flex-col">
-      {/* Header */}
-      <header className="p-6 flex justify-between items-center text-white z-10">
-        <Link href="/dashboard/parent" className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors">
-          <ArrowLeft size={20} /> Cancel Assessment
-        </Link>
-        <div className="flex items-center gap-2 px-3 py-1 bg-white/10 rounded-full">
-          <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-          <span className="text-xs font-bold tracking-wider">LIVE INPUT</span>
+    <div className="min-h-screen bg-slate-50 p-6 flex flex-col items-center">
+      <div className="w-full max-w-2xl">
+        <div className="mb-6 flex items-center justify-between">
+          <Link href="/dashboard/parent" className="flex items-center text-slate-500 hover:text-slate-900 transition-colors">
+            <ArrowLeft className="mr-2" size={20} /> Back to Dashboard
+          </Link>
+          <div className="flex items-center gap-2">
+             <span className="text-sm font-bold text-slate-700">Child:</span>
+             <select 
+               className="bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-sm font-medium focus:ring-2 focus:ring-medical-500 outline-none"
+               value={selectedChildId}
+               onChange={(e) => setSelectedChildId(e.target.value)}
+             >
+               {children.map(child => (
+                 <option key={child.id} value={child.id}>{child.name}</option>
+               ))}
+             </select>
+          </div>
         </div>
-      </header>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col items-center justify-center relative p-4">
-        {/* Video Feed Container */}
-        <div className="relative w-full max-w-5xl aspect-video bg-black rounded-3xl overflow-hidden shadow-2xl ring-1 ring-white/10">
-          <Webcam
-            audio={true}
-            ref={webcamRef}
-            className="w-full h-full object-cover"
-            mirrored={true}
-          />
-
-          {/* Overlay Instructions */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-            {step === 1 && !isRecording && !isUploading && (
-              <div className="bg-black/40 backdrop-blur-md p-8 rounded-2xl text-center max-w-lg border border-white/10 pointer-events-auto">
-                <h2 className="text-3xl font-bold text-white mb-4">Ready for Assessment</h2>
-                <p className="text-slate-200 text-lg mb-8">
-                  Please ensure the child is visible and facing the camera. We will analyze eye contact and response time.
-                </p>
-                <button 
-                  onClick={handleStart}
-                  className="px-8 py-4 bg-red-600 hover:bg-red-700 text-white rounded-full font-bold text-lg shadow-lg shadow-red-900/50 transition-all hover:scale-105 flex items-center gap-3 mx-auto"
-                >
-                  <Video size={24} /> Start Recording
-                </button>
+        <div className="bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100">
+          <div className="relative aspect-video bg-slate-900">
+            {!isRecording && !isUploading && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                <div className="bg-black/30 backdrop-blur-sm text-white px-6 py-3 rounded-full font-medium border border-white/20">
+                  Ready to Record
+                </div>
               </div>
             )}
+            
+            <Webcam
+              ref={webcamRef}
+              audio={true}
+              className="w-full h-full object-cover"
+              mirrored={true}
+            />
 
             {isRecording && (
-              <div className="absolute bottom-12 left-0 right-0 flex flex-col items-center pointer-events-auto">
-                <div className="bg-black/60 backdrop-blur-sm px-8 py-4 rounded-2xl border border-white/10 mb-8 text-center animate-fade-in-up">
-                  <p className="text-white/80 text-sm uppercase tracking-widest font-bold mb-1">Instruction</p>
-                  <h3 className="text-3xl font-bold text-white">"Leo, look here!"</h3>
-                </div>
-                
-                <button 
-                  onClick={handleStop}
-                  className="px-8 py-4 bg-white hover:bg-slate-200 text-slate-900 rounded-full font-bold text-lg shadow-lg transition-all hover:scale-105 flex items-center gap-3"
-                >
-                  <div className="w-4 h-4 bg-red-600 rounded-sm" /> Stop Assessment
-                </button>
+              <div className="absolute top-6 right-6 flex items-center gap-2 animate-pulse">
+                <div className="w-3 h-3 bg-red-500 rounded-full shadow-[0_0_10px_rgba(239,68,68,0.6)]"></div>
+                <span className="text-white font-mono text-sm font-bold drop-shadow-md">REC</span>
               </div>
             )}
-
-            {isUploading && (
-               <div className="bg-black/60 backdrop-blur-md p-8 rounded-2xl text-center max-w-lg border border-white/10">
-                 <div className="w-12 h-12 border-4 border-white/30 border-t-white rounded-full animate-spin mx-auto mb-4" />
-                 <h2 className="text-2xl font-bold text-white">Uploading...</h2>
-                 <p className="text-slate-300">Please wait while we secure the footage.</p>
-               </div>
+            
+            {/* Audio Visualizer (Mock) */}
+            {isRecording && (
+              <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/80 to-transparent flex items-end justify-center pb-4 gap-1">
+                {[...Array(20)].map((_, i) => (
+                  <div 
+                    key={i} 
+                    className="w-1 bg-green-400 rounded-full transition-all duration-75"
+                    style={{ 
+                      height: `${Math.max(10, Math.random() * audioLevel)}%`,
+                      opacity: 0.8 
+                    }}
+                  />
+                ))}
+              </div>
             )}
           </div>
 
-          {/* Audio Waveform Feedback */}
-          <div className="absolute top-8 right-8 bg-black/40 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 flex items-center gap-3">
-            <Mic size={16} className={isRecording ? "text-green-400" : "text-slate-400"} />
-            <div className="flex gap-1 h-4 items-center">
-              {[1, 2, 3, 4, 5].map((i) => (
-                <div
-                  key={i}
-                  className="w-1 bg-white rounded-full transition-all duration-75"
-                  style={{
-                    height: isRecording ? `${Math.max(4, Math.random() * audioLevel)}px` : '4px',
-                    opacity: isRecording ? 1 : 0.3
-                  }}
-                />
-              ))}
+          <div className="p-8 flex flex-col items-center gap-6">
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl font-black text-slate-900">
+                {isRecording ? "Recording in Progress..." : "Start Assessment"}
+              </h2>
+              <p className="text-slate-500 max-w-md mx-auto">
+                {isRecording 
+                  ? "Follow the on-screen exercises. Speak clearly and ensure good lighting." 
+                  : "Please ensure the camera is positioned correctly and your child is visible."}
+              </p>
             </div>
+
+            <div className="flex gap-4">
+              {!isRecording ? (
+                <button
+                  onClick={handleStart}
+                  disabled={children.length === 0}
+                  className="flex items-center gap-3 px-8 py-4 bg-medical-600 hover:bg-medical-700 text-white rounded-2xl font-bold text-lg transition-all shadow-lg shadow-medical-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Video size={24} />
+                  Start Recording
+                </button>
+              ) : (
+                <button
+                  onClick={handleStop}
+                  className="flex items-center gap-3 px-8 py-4 bg-red-500 hover:bg-red-600 text-white rounded-2xl font-bold text-lg transition-all shadow-lg shadow-red-200 hover:scale-105"
+                >
+                  <div className="w-4 h-4 bg-white rounded-sm" />
+                  Stop & Save
+                </button>
+              )}
+            </div>
+
+            {isUploading && (
+              <div className="flex items-center gap-3 text-medical-600 font-bold animate-pulse">
+                <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                Uploading Assessment...
+              </div>
+            )}
           </div>
         </div>
       </div>

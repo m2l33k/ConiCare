@@ -1,8 +1,12 @@
 {
   "/page": "app/page.js",
-  "/assessment/page": "app/assessment/page.js",
-  "/(auth)/login/page": "app/(auth)/login/page.js",
+  "/dashboard/parent/specialists/page": "app/dashboard/parent/specialists/page.js",
+  "/dashboard/specialist/page": "app/dashboard/specialist/page.js",
+  "/dashboard/parent/children/page": "app/dashboard/parent/children/page.js",
+  "/dashboard/parent/messages/page": "app/dashboard/parent/messages/page.js",
+  "/dashboard/specialist/profile/page": "app/dashboard/specialist/profile/page.js",
+  "/dashboard/parent/groups/page": "app/dashboard/parent/groups/page.js",
+  "/dashboard/parent/games/page": "app/dashboard/parent/games/page.js",
   "/dashboard/parent/page": "app/dashboard/parent/page.js",
-  "/child/play/page": "app/child/play/page.js",
-  "/dashboard/specialist/page": "app/dashboard/specialist/page.js"
+  "/dashboard/parent/clips/page": "app/dashboard/parent/clips/page.js"
 }

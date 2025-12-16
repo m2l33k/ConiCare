@@ -1,13 +1,30 @@
 import { Sidebar } from "./sidebar";
+import { createClient } from "@/lib/supabase/server";
+import { redirect } from "next/navigation";
 
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const supabase = createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/");
+  }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+
+  const userRole = profile?.role || 'parent';
+
   return (
     <div className="flex min-h-screen bg-slate-50 font-sans text-slate-900">
-      <Sidebar />
+      <Sidebar role={userRole} />
 
       {/* Main Content */}
       {/* 'ms-64' adds margin-start (left in LTR, right in RTL) to offset the fixed sidebar */}
