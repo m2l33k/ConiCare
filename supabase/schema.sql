@@ -1,118 +1,147 @@
--- Enable necessary extensions
-create extension if not exists "uuid-ossp";
+-- Enable UUID extension
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Create Enums
-create type user_role as enum ('admin', 'specialist', 'guardian');
-create type assessment_type as enum ('VIDEO_AI', 'GAME_SCORE');
-create type appointment_status as enum ('scheduled', 'completed', 'cancelled');
-
--- Create Profiles Table (extends auth.users)
-create table profiles (
-  id uuid references auth.users on delete cascade primary key,
-  role user_role not null default 'guardian',
+-- 1. Profiles Table (Linked to auth.users)
+create table public.profiles (
+  id uuid references auth.users on delete cascade not null primary key,
+  role text check (role in ('parent', 'specialist', 'admin')) not null,
   full_name text,
-  avatar_url text,
-  is_verified boolean default false,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
--- Create Patients Table (formerly children)
-create table patients (
+-- 2. Children Table
+create table public.children (
   id uuid default uuid_generate_v4() primary key,
-  parent_id uuid references profiles(id) on delete cascade not null,
+  parent_id uuid references public.profiles(id) on delete cascade not null,
   name text not null,
-  dob date not null,
-  diagnosis text,
+  pin_code text default '1234' not null,
+  avatar_theme text default 'default',
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
--- Create Assessments Table
-create table assessments (
+-- 3. Assessments Table
+create table public.assessments (
   id uuid default uuid_generate_v4() primary key,
-  patient_id uuid references patients(id) on delete cascade not null,
-  video_url text, -- URL to video in storage bucket 'assessments'
-  ai_analysis_json jsonb, -- JSON result from AI analysis
+  child_id uuid references public.children(id) on delete cascade not null,
+  video_path text not null,
+  status text check (status in ('pending', 'reviewed')) default 'pending' not null,
   specialist_notes text,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
--- Create Game Results Table
-create table game_results (
+-- 4. Game Scores Table
+create table public.game_scores (
   id uuid default uuid_generate_v4() primary key,
-  patient_id uuid references patients(id) on delete cascade not null,
-  game_type text not null,
-  score int not null default 0,
-  timestamp timestamp with time zone default timezone('utc'::text, now()) not null
-);
-
--- Create Appointments Table
-create table appointments (
-  id uuid default uuid_generate_v4() primary key,
-  specialist_id uuid references profiles(id) on delete cascade not null,
-  parent_id uuid references profiles(id) on delete cascade not null,
-  meeting_link text,
-  time timestamp with time zone not null,
-  status appointment_status default 'scheduled',
+  child_id uuid references public.children(id) on delete cascade not null,
+  game_name text not null,
+  score integer not null,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
--- Enable Row Level Security (RLS)
-alter table profiles enable row level security;
-alter table patients enable row level security;
-alter table assessments enable row level security;
-alter table game_results enable row level security;
-alter table appointments enable row level security;
+-- Enable Row Level Security
+alter table public.profiles enable row level security;
+alter table public.children enable row level security;
+alter table public.assessments enable row level security;
+alter table public.game_scores enable row level security;
 
 -- RLS Policies
 
--- Profiles: Users can view their own profile.
-create policy "Users can view own profile" on profiles
-  for select using (auth.uid() = id);
-  
--- Profiles: Specialists and Admins can view all profiles (simplified for context)
-create policy "Staff can view all profiles" on profiles
+-- Profiles:
+-- Users can read/update their own profile.
+create policy "Public profiles are viewable by everyone." on public.profiles
+  for select using (true);
+
+create policy "Users can insert their own profile." on public.profiles
+  for insert with check (auth.uid() = id);
+
+create policy "Users can update own profile." on public.profiles
+  for update using (auth.uid() = id);
+
+-- Children:
+-- Parents can view/edit their own children.
+create policy "Parents can view their own children" on public.children
+  for select using (auth.uid() = parent_id);
+
+create policy "Parents can insert their own children" on public.children
+  for insert with check (auth.uid() = parent_id);
+
+create policy "Parents can update their own children" on public.children
+  for update using (auth.uid() = parent_id);
+
+-- Specialists can view all children (for now, or assigned ones). 
+-- Assuming 'specialist' role can view all for this MVP.
+create policy "Specialists can view all children" on public.children
   for select using (
     exists (
-      select 1 from profiles where id = auth.uid() and role in ('specialist', 'admin')
+      select 1 from public.profiles
+      where profiles.id = auth.uid() and profiles.role = 'specialist'
     )
   );
 
--- Patients: Parents can view own children.
-create policy "Parents can view own patients" on patients
-  for select using (parent_id = auth.uid());
-  
--- Patients: Specialists can view all patients (or assigned ones - simplified to all for now)
-create policy "Specialists can view all patients" on patients
+-- Assessments:
+-- Parents can view their children's assessments.
+create policy "Parents can view their children's assessments" on public.assessments
   for select using (
     exists (
-      select 1 from profiles where id = auth.uid() and role = 'specialist'
+      select 1 from public.children
+      where children.id = assessments.child_id and children.parent_id = auth.uid()
     )
   );
 
--- Assessments: Parents can view own child's assessments.
-create policy "Parents can view own assessments" on assessments
-  for select using (
+-- Parents can upload assessments.
+create policy "Parents can insert assessments" on public.assessments
+  for insert with check (
     exists (
-      select 1 from patients
-      where patients.id = assessments.patient_id
-      and patients.parent_id = auth.uid()
+      select 1 from public.children
+      where children.id = assessments.child_id and children.parent_id = auth.uid()
     )
   );
 
--- Assessments: Specialists can view all assessments.
-create policy "Specialists can view all assessments" on assessments
+-- Specialists can view and update assessments.
+create policy "Specialists can view all assessments" on public.assessments
   for select using (
     exists (
-      select 1 from profiles where id = auth.uid() and role = 'specialist'
+      select 1 from public.profiles
+      where profiles.id = auth.uid() and profiles.role = 'specialist'
     )
   );
 
--- Triggers for User Creation
+create policy "Specialists can update assessments" on public.assessments
+  for update using (
+    exists (
+      select 1 from public.profiles
+      where profiles.id = auth.uid() and profiles.role = 'specialist'
+    )
+  );
+
+-- Game Scores:
+-- Public read (or restricted to parent/specialist).
+create policy "Parents can view their children's scores" on public.game_scores
+  for select using (
+    exists (
+      select 1 from public.children
+      where children.id = game_scores.child_id and children.parent_id = auth.uid()
+    )
+  );
+
+-- Insert policy (usually from client side if authenticated as parent, or maybe anonymous? 
+-- The user said "Child Game Mode" is usually a kiosk. 
+-- If the child is playing, who is logged in? The parent? 
+-- Assuming Parent is logged in on the device.)
+create policy "Parents can insert game scores" on public.game_scores
+  for insert with check (
+    exists (
+      select 1 from public.children
+      where children.id = game_scores.child_id and children.parent_id = auth.uid()
+    )
+  );
+
+-- Trigger for New User Creation (Auto-Profile)
 create or replace function public.handle_new_user()
 returns trigger as $$
 begin
-  insert into public.profiles (id, full_name, avatar_url, role)
-  values (new.id, new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'avatar_url', (new.raw_user_meta_data->>'role')::user_role);
+  insert into public.profiles (id, full_name, role)
+  values (new.id, new.raw_user_meta_data->>'full_name', coalesce(new.raw_user_meta_data->>'role', 'parent'));
   return new;
 end;
 $$ language plpgsql security definer;
