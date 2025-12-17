@@ -37,3 +37,13 @@ __pycache__/
 models/
 chroma_db/
 .env
+
+# Next.js
+.next/
+out/
+build/
+
+# Misc
+.cache/
+coverage/
+.turbo/
