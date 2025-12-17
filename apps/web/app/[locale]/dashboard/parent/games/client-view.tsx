@@ -59,11 +59,11 @@ export default function GamesClientView({ games, gameScores, childrenList }: Gam
               
               <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-2">
                 <button 
-                  onClick={() => alert(`Launching ${game.title} for child ID: ${selectedChildId}... (Game integration pending)`)}
+                  onClick={() => alert(t('launchAlert', { game: game.title, childId: selectedChildId }))}
                   className="px-6 py-2 bg-medical-600 text-white rounded-full font-bold flex items-center gap-2 transform translate-y-4 group-hover:translate-y-0 transition-transform hover:bg-medical-700"
                 >
                   <Play size={16} fill="currentColor" />
-                  لعب الآن
+                  {t('playNow')}
                 </button>
               </div>
             </div>
@@ -91,8 +91,8 @@ export default function GamesClientView({ games, gameScores, childrenList }: Gam
              <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-400">
                <Gamepad2 size={40} />
              </div>
-             <h3 className="text-xl font-bold text-slate-900">قريباً</h3>
-             <p className="text-slate-500">نعمل حالياً على إضافة ألعاب جديدة.</p>
+             <h3 className="text-xl font-bold text-slate-900">{t('comingSoon')}</h3>
+             <p className="text-slate-500">{t('workingOn')}</p>
           </div>
         )}
       </div>

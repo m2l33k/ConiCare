@@ -22,7 +22,7 @@ export default function GameArena() {
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
          // Assuming parent is logged in
-         const { data } = await supabase.from('children').select('id').eq('parent_id', user.id).limit(1).single();
+         const { data } = await supabase.from('children').select('id').eq('parent_id', user.id).limit(1).maybeSingle();
          if (data) setChildId(data.id);
       }
     };
@@ -35,11 +35,11 @@ export default function GameArena() {
   useEffect(() => {
     const enterFullscreen = async () => {
       try {
-        if (document.documentElement.requestFullscreen) {
+        if (document.documentElement.requestFullscreen && !document.fullscreenElement) {
           await document.documentElement.requestFullscreen();
         }
       } catch (e) {
-        console.error("Fullscreen blocked:", e);
+        // Silently fail if interaction is required
       }
     };
     enterFullscreen();
@@ -160,7 +160,10 @@ export default function GameArena() {
         </button>
 
         {/* Card 2: Focus */}
-        <button className="bg-white h-96 rounded-[3rem] border-b-[16px] border-purple-200 shadow-xl hover:shadow-2xl hover:-translate-y-4 transition-all duration-300 group flex flex-col items-center justify-center gap-8 relative overflow-hidden mt-12">
+        <button 
+          onClick={() => alert(t('comingSoon'))}
+          className="bg-white h-96 rounded-[3rem] border-b-[16px] border-purple-200 shadow-xl hover:shadow-2xl hover:-translate-y-4 transition-all duration-300 group flex flex-col items-center justify-center gap-8 relative overflow-hidden mt-12"
+        >
            <div className="absolute inset-0 bg-purple-50 opacity-0 group-hover:opacity-100 transition-opacity" />
           <div className="w-32 h-32 bg-purple-100 rounded-full flex items-center justify-center text-purple-500 group-hover:scale-110 transition-transform duration-500 relative z-10">
             <Eye size={64} />
@@ -169,7 +172,10 @@ export default function GameArena() {
         </button>
 
         {/* Card 3: Story */}
-        <button className="bg-white h-96 rounded-[3rem] border-b-[16px] border-amber-200 shadow-xl hover:shadow-2xl hover:-translate-y-4 transition-all duration-300 group flex flex-col items-center justify-center gap-8 relative overflow-hidden">
+        <button 
+          onClick={() => alert(t('comingSoon'))}
+          className="bg-white h-96 rounded-[3rem] border-b-[16px] border-amber-200 shadow-xl hover:shadow-2xl hover:-translate-y-4 transition-all duration-300 group flex flex-col items-center justify-center gap-8 relative overflow-hidden"
+        >
            <div className="absolute inset-0 bg-amber-50 opacity-0 group-hover:opacity-100 transition-opacity" />
           <div className="w-32 h-32 bg-amber-100 rounded-full flex items-center justify-center text-amber-500 group-hover:scale-110 transition-transform duration-500 relative z-10">
             <BookOpen size={64} />
