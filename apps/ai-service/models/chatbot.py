@@ -49,11 +49,16 @@ def ask_chatbot(question: str):
             return_source_documents=True
         )
         
-        response = qa_chain.invoke({"query": question})
-        return {
-            "answer": response["result"],
-            "sources": [doc.metadata.get("source", "Unknown") for doc in response["source_documents"]]
-        }
+        try:
+            response = qa_chain.invoke({"query": question})
+            return {
+                "answer": response["result"],
+                "sources": [doc.metadata.get("source", "Unknown") for doc in response["source_documents"]]
+            }
+        except Exception as e:
+            if "model 'llama3' not found" in str(e):
+                return {"answer": "The AI model (llama3) is currently downloading or missing. Please wait a few minutes and try again.", "sources": []}
+            raise e
     else:
         # Fallback to pure LLM if no docs indexed
         prompt = PromptTemplate(
@@ -61,5 +66,10 @@ def ask_chatbot(question: str):
             template="You are a helpful assistant for parents of children with special needs. Answer the following question: {question}"
         )
         chain = prompt | llm
-        response = chain.invoke({"question": question})
-        return {"answer": response, "sources": ["General Knowledge (No docs indexed yet)"]}
+        try:
+            response = chain.invoke({"question": question})
+            return {"answer": response, "sources": ["General Knowledge (No docs indexed yet)"]}
+        except Exception as e:
+            if "model 'llama3' not found" in str(e):
+                return {"answer": "The AI model (llama3) is currently downloading or missing. Please wait a few minutes and try again.", "sources": []}
+            raise e

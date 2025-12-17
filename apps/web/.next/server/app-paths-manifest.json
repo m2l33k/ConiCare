@@ -1,3 +1,7 @@
 {
-  "/page": "app/page.js"
+  "/[locale]/dashboard/specialist/profile/page": "app/[locale]/dashboard/specialist/profile/page.js",
+  "/[locale]/dashboard/specialist/patient/[id]/page": "app/[locale]/dashboard/specialist/patient/[id]/page.js",
+  "/[locale]/dashboard/parent/speech/page": "app/[locale]/dashboard/parent/speech/page.js",
+  "/[locale]/dashboard/parent/page": "app/[locale]/dashboard/parent/page.js",
+  "/[locale]/dashboard/parent/chatbot/page": "app/[locale]/dashboard/parent/chatbot/page.js"
 }

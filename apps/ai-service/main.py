@@ -1,4 +1,5 @@
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import shutil
 import os
@@ -9,6 +10,15 @@ from models.progress_predictor import predict_score_improvement
 from models.chatbot import ask_chatbot, initialize_knowledge_base
 
 app = FastAPI(title="Cognicare AI Service (Local/Free)")
+
+# Enable CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
 
 # Ensure temp directory exists
 os.makedirs("temp_uploads", exist_ok=True)

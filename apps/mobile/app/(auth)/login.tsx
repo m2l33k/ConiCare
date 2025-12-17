@@ -24,7 +24,7 @@ export default function LoginScreen() {
         <View className="w-24 h-24 bg-medical-100 rounded-full justify-center items-center mb-4">
           <Text className="text-4xl">🧠</Text>
         </View>
-        <Text className="text-3xl font-bold text-medical-900">MindBloom</Text>
+        <Text className="text-3xl font-bold text-medical-900">Cognicare</Text>
         <Text className="text-gray-500 mt-2">Cognitive Health Ecosystem</Text>
       </View>
 
