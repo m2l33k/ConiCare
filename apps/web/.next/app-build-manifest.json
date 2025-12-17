@@ -1,9 +1,9 @@
 {
   "pages": {
-    "/[locale]/dashboard/parent/specialists/page": [
+    "/[locale]/dashboard/parent/chatbot/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/[locale]/dashboard/parent/specialists/page.js"
+      "static/chunks/app/[locale]/dashboard/parent/chatbot/page.js"
     ],
     "/[locale]/dashboard/layout": [
       "static/chunks/webpack.js",
@@ -26,60 +26,10 @@
       "static/chunks/main-app.js",
       "static/chunks/app/[locale]/dashboard/parent/page.js"
     ],
-    "/[locale]/dashboard/parent/messages/page": [
+    "/[locale]/dashboard/parent/speech/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/[locale]/dashboard/parent/messages/page.js"
-    ],
-    "/[locale]/child/play/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/[locale]/child/play/page.js"
-    ],
-    "/[locale]/child/layout": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/[locale]/child/layout.js"
-    ],
-    "/[locale]/dashboard/parent/groups/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/[locale]/dashboard/parent/groups/page.js"
-    ],
-    "/[locale]/dashboard/parent/groups/[id]/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/[locale]/dashboard/parent/groups/[id]/page.js"
-    ],
-    "/[locale]/dashboard/parent/clips/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/[locale]/dashboard/parent/clips/page.js"
-    ],
-    "/[locale]/dashboard/parent/children/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/[locale]/dashboard/parent/children/page.js"
-    ],
-    "/[locale]/dashboard/parent/games/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/[locale]/dashboard/parent/games/page.js"
-    ],
-    "/[locale]/dashboard/parent/progress/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/[locale]/dashboard/parent/progress/page.js"
-    ],
-    "/[locale]/dashboard/parent/consultations/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/[locale]/dashboard/parent/consultations/page.js"
-    ],
-    "/[locale]/assessment/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/[locale]/assessment/page.js"
+      "static/chunks/app/[locale]/dashboard/parent/speech/page.js"
     ],
     "/[locale]/dashboard/specialist/page": [
       "static/chunks/webpack.js",
@@ -91,6 +41,66 @@
       "static/chunks/main-app.js",
       "static/chunks/app/[locale]/dashboard/specialist/patients/page.js"
     ],
+    "/[locale]/dashboard/specialist/patient/[id]/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/[locale]/dashboard/specialist/patient/[id]/page.js"
+    ],
+    "/[locale]/dashboard/parent/specialists/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/[locale]/dashboard/parent/specialists/page.js"
+    ],
+    "/[locale]/dashboard/parent/consultations/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/[locale]/dashboard/parent/consultations/page.js"
+    ],
+    "/[locale]/dashboard/parent/messages/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/[locale]/dashboard/parent/messages/page.js"
+    ],
+    "/[locale]/dashboard/parent/groups/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/[locale]/dashboard/parent/groups/page.js"
+    ],
+    "/[locale]/dashboard/parent/groups/[id]/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/[locale]/dashboard/parent/groups/[id]/page.js"
+    ],
+    "/[locale]/dashboard/parent/children/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/[locale]/dashboard/parent/children/page.js"
+    ],
+    "/[locale]/dashboard/parent/games/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/[locale]/dashboard/parent/games/page.js"
+    ],
+    "/[locale]/child/play/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/[locale]/child/play/page.js"
+    ],
+    "/[locale]/child/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/[locale]/child/layout.js"
+    ],
+    "/[locale]/dashboard/parent/progress/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/[locale]/dashboard/parent/progress/page.js"
+    ],
+    "/[locale]/assessment/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/[locale]/assessment/page.js"
+    ],
     "/[locale]/dashboard/specialist/messages/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -101,6 +111,11 @@
       "static/chunks/main-app.js",
       "static/chunks/app/[locale]/dashboard/specialist/groups/page.js"
     ],
+    "/[locale]/dashboard/specialist/groups/[id]/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/[locale]/dashboard/specialist/groups/[id]/page.js"
+    ],
     "/[locale]/dashboard/specialist/schedule/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
@@ -110,21 +125,6 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/[locale]/dashboard/specialist/profile/page.js"
-    ],
-    "/[locale]/dashboard/specialist/patient/[id]/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/[locale]/dashboard/specialist/patient/[id]/page.js"
-    ],
-    "/[locale]/dashboard/parent/speech/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/[locale]/dashboard/parent/speech/page.js"
-    ],
-    "/[locale]/dashboard/parent/chatbot/page": [
-      "static/chunks/webpack.js",
-      "static/chunks/main-app.js",
-      "static/chunks/app/[locale]/dashboard/parent/chatbot/page.js"
     ]
   }
 }

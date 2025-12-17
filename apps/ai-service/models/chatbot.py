@@ -1,5 +1,11 @@
 from langchain_ollama import OllamaLLM
+try:
+    from langchain_openai import ChatOpenAI
+except ImportError:
+    ChatOpenAI = None
+
 from langchain_core.prompts import PromptTemplate
+from langchain_core.output_parsers import StrOutputParser
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_community.vectorstores import Chroma
 from langchain_huggingface import HuggingFaceEmbeddings
@@ -7,9 +13,28 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain.chains import RetrievalQA
 import os
 
-# Initialize Ollama (Assumes user has Ollama running with 'llama3' or 'mistral')
-# Command to run ollama: `ollama run llama3`
-llm = OllamaLLM(model="llama3") 
+# Load environment variables (if python-dotenv is available)
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except ImportError:
+    pass
+
+# Initialize LLM
+# Priority: GitHub Models (via OpenAI compatible API) -> Ollama
+github_token = os.getenv("GITHUB_TOKEN")
+
+if github_token and ChatOpenAI:
+    print("Using GitHub Models (Phi-4)")
+    llm = ChatOpenAI(
+        model="Phi-4-multimodal-instruct",
+        api_key=github_token,
+        base_url="https://models.inference.ai.azure.com"
+    )
+else:
+    print("Using Local Ollama (llama3)")
+    # Command to run ollama: `ollama run llama3`
+    llm = OllamaLLM(model="llama3") 
 
 # Vector Store Setup
 VECTOR_DB_PATH = "chroma_db"
@@ -65,7 +90,7 @@ def ask_chatbot(question: str):
             input_variables=["question"],
             template="You are a helpful assistant for parents of children with special needs. Answer the following question: {question}"
         )
-        chain = prompt | llm
+        chain = prompt | llm | StrOutputParser()
         try:
             response = chain.invoke({"question": question})
             return {"answer": response, "sources": ["General Knowledge (No docs indexed yet)"]}

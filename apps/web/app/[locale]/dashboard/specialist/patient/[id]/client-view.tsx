@@ -83,11 +83,14 @@ export default function SpecialistPatientView({
 }: Props) {
   const t = useTranslations('SpecialistPatientView');
   // State
-  const [activeTab, setActiveTab] = useState<'cognition' | 'behavior'>('cognition');
+  const [activeTab, setActiveTab] = useState<'cognition' | 'behavior' | 'ai_analysis'>('cognition');
   const [compareMode, setCompareMode] = useState(false);
   const [selectedAssessmentId, setSelectedAssessmentId] = useState<string | null>(assessments[0]?.id || null);
   const [compareAssessmentId, setCompareAssessmentId] = useState<string | null>(assessments[1]?.id || null);
   
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisResult, setAnalysisResult] = useState<string | null>(null);
+
   const [notes, setNotes] = useState(initialNotes);
   const [newNote, setNewNote] = useState("");
   
@@ -131,6 +134,37 @@ export default function SpecialistPatientView({
 
     if (data) {
       setPrescriptions([data, ...prescriptions]);
+    }
+  };
+
+  const handleAnalyzeVideo = async () => {
+    if (!currentAssessment) return;
+    
+    setIsAnalyzing(true);
+    setAnalysisResult(null);
+    setActiveTab('ai_analysis');
+
+    try {
+      const videoUrl = getPublicUrl(currentAssessment.video_path);
+      const response = await fetch('http://localhost:8000/analyze/video-url', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ video_url: videoUrl }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to connect to AI service');
+      }
+
+      const data = await response.json();
+      setAnalysisResult(data.analysis);
+    } catch (error) {
+      console.error('Error analyzing video:', error);
+      setAnalysisResult("Error: Could not analyze video. Please ensure the local AI service is running.");
+    } finally {
+      setIsAnalyzing(false);
     }
   };
 
@@ -277,6 +311,15 @@ export default function SpecialistPatientView({
 
             {/* Controls Overlay */}
             <div className="absolute bottom-4 right-4 flex gap-2">
+              <button 
+                onClick={handleAnalyzeVideo}
+                disabled={isAnalyzing || !currentAssessment}
+                className="flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold backdrop-blur-md bg-purple-600/80 text-white hover:bg-purple-600 shadow-lg transition-all disabled:opacity-50"
+              >
+                <Brain size={16} />
+                {isAnalyzing ? 'Analyzing...' : 'AI Analysis'}
+              </button>
+
               <button 
                 onClick={() => setCompareMode(!compareMode)}
                 className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold backdrop-blur-md transition-all ${
